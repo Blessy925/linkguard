@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinkGuard – Safe or Fake?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f1f3d; --ink-soft:#4a5a78; --paper:#f4f6fa; --card:#ffffff; --line:#dde3ee;
+    --brand:#1f4fd8; --safe:#0f8a5f; --safe-bg:#e4f5ee;
+    --warn:#b86e00; --warn-bg:#fdf1dc; --bad:#c62f3d; --bad-bg:#fbe5e7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--ink);color:#fff;padding:18px 24px}
+  .bar{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:.2px}
+  .bar svg{width:26px;height:26px}
+  main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:48px 20px 32px}
+  h1{font-size:clamp(2rem,6vw,3rem);font-weight:800;line-height:1.1;letter-spacing:-.02em}
+  .sub{margin-top:10px;color:var(--ink-soft);font-size:1.05rem}
+  .box{margin-top:32px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 6px 24px rgba(15,31,61,.06)}
+  label{display:block;font-weight:700;font-size:.95rem;margin-bottom:10px}
+  textarea{width:100%;height:110px;resize:vertical;border:1.5px solid var(--line);border-radius:10px;padding:14px;font:inherit;font-size:1rem;color:var(--ink);background:#fbfcfe}
+  textarea:focus{outline:3px solid rgba(31,79,216,.25);border-color:var(--brand)}
+  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:13px 26px;cursor:pointer;transition:background .15s}
+  .go{background:var(--brand);color:#fff;flex:1;min-width:160px}
+  .go:hover{background:#173db0}
+  .clear{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line)}
+  .clear:hover{background:var(--paper)}
+  button:focus-visible{outline:3px solid rgba(31,79,216,.35);outline-offset:2px}
+  #result{margin-top:24px;display:none;border-radius:14px;padding:24px;border:1.5px solid}
+  #result.show{display:block}
+  #result.safe{background:var(--safe-bg);border-color:var(--safe);color:#064d36}
+  #result.warn{background:var(--warn-bg);border-color:var(--warn);color:#6b4000}
+  #result.bad{background:var(--bad-bg);border-color:var(--bad);color:#7d1520}
+  .verdict{display:flex;align-items:center;gap:14px}
+  .verdict svg{width:44px;height:44px;flex:none}
+  .verdict h2{font-size:1.7rem;font-weight:800;line-height:1.1}
+  .verdict p{font-size:.95rem;opacity:.85;margin-top:2px}
+  .domain{margin-top:16px;font-weight:700;word-break:break-all;font-size:1rem}
+  h3{margin-top:18px;font-size:.95rem;font-weight:800}
+  ul{margin-top:8px;list-style:none;display:grid;gap:8px}
+  li{background:rgba(255,255,255,.65);border-radius:8px;padding:9px 12px;font-size:.95rem;font-weight:500}
+  .tips{margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .tip{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tip b{display:block;font-size:.95rem}
+  .tip span{font-size:.88rem;color:var(--ink-soft)}
+  footer{text-align:center;color:var(--ink-soft);font-size:.82rem;padding:20px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+    LinkGuard
+  </div>
+</header>
+
+<main>
+  <h1>Safe or Fake?</h1>
+  <p class="sub">Paste any link or message. Get an instant answer.</p>
+
+  <section class="box">
+    <label for="input">Paste Link</label>
+    <textarea id="input" placeholder="https://example.com or the full message"></textarea>
+    <div class="row">
+      <button class="go" id="check">Check Now</button>
+      <button class="clear" id="clear">Clear</button>
+    </div>
+  </section>
+
+  <section id="result" aria-live="polite">
+    <div class="verdict">
+      <div id="icon"></div>
+      <div><h2 id="title"></h2><p id="desc"></p></div>
+    </div>
+    <div class="domain" id="domain"></div>
+    <h3>Findings</h3>
+    <ul id="reasons"></ul>
+  </section>
+
+  <section class="tips">
+    <div class="tip"><b>Never share OTP</b><span>No real company asks for it.</span></div>
+    <div class="tip"><b>Check the domain</b><span>Spelling tricks are common.</span></div>
+    <div class="tip"><b>Avoid urgency</b><span>“Act now” is a warning sign.</span></div>
+  </section>
+</main>
+
+<footer>ML model on link patterns. Not a guarantee. When unsure, open the official app directly.</footer>
+
+<script>
+(function(){
+  var $ = function(id){return document.getElementById(id)};
+  var ICONS = {
+    safe:'<svg viewBox="0 0 24 24" fill="none" stroke="#0f8a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+    warn:'<svg viewBox="0 0 24 24" fill="none" stroke="#b86e00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></svg>',
+    bad:'<svg viewBox="0 0 24 24" fill="none" stroke="#c62f3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'
+  };
+  var TEXT = {safe:['Looks Safe','Low risk.'], warn:['Suspicious','Be careful. Share nothing.'], bad:['Likely Fake','Do not open. Share nothing.']};
+
+  function show(level, host, items, risk){
+    $('result').className = 'show ' + level;
+    $('icon').innerHTML = ICONS[level];
+    $('title').textContent = TEXT[level][0];
+    $('desc').textContent = risk == null ? TEXT[level][1] : 'Risk score: ' + risk + '%. ' + TEXT[level][1];
+    $('domain').textContent = host;
+    var ul = $('reasons'); ul.innerHTML = '';
+    items.forEach(function(t){ var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+    $('result').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  async function run(){
+    var text = $('input').value.trim();
+    if(!text){ $('input').focus(); return; }
+    var btn = $('check'); btn.disabled = true; btn.textContent = 'Checking…';
+    try{
+      var res = await fetch('/predict', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:text})});
+      var d = await res.json();
+      if(!res.ok){ show('warn', 'No link found', ['Paste a full link, like https://…']); }
+      else { show(d.level, d.host, d.reasons.length ? d.reasons : ['✓ No clear warning signs'], d.risk); }
+    }catch(e){
+      show('warn', 'Server not reachable', ['Start the server: python app.py']);
+    }
+    btn.disabled = false; btn.textContent = 'Check Now';
+  }
+
+  $('check').addEventListener('click', run);
+  $('clear').addEventListener('click', function(){ $('input').value=''; $('result').className=''; $('input').focus(); });
+  $('input').addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); run(); } });
+})();
+</script>
+</body>
+</html>
